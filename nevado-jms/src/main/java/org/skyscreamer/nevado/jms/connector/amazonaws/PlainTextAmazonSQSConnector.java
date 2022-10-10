@@ -14,14 +14,14 @@ import org.skyscreamer.nevado.jms.message.NevadoTextMessage;
  */
 public class PlainTextAmazonSQSConnector extends AmazonAwsSQSConnector {
 
-	public PlainTextAmazonSQSConnector(String awsAccessKey, String awsSecretKey, boolean isSecure,
+	public PlainTextAmazonSQSConnector(String awsAccessKey, String awsSecretKey, String awsSQSEndpoint, String awsSNSEndpoint, boolean isSecure,
 			long receiveCheckIntervalMs) {
-		super(awsAccessKey, awsSecretKey, isSecure, receiveCheckIntervalMs);
+		super(awsAccessKey, awsSecretKey, awsSQSEndpoint, awsSNSEndpoint, isSecure, receiveCheckIntervalMs);
 	}
 
-	public PlainTextAmazonSQSConnector(String awsAccessKey, String awsSecretKey, boolean isSecure,
+	public PlainTextAmazonSQSConnector(String awsAccessKey, String awsSecretKey, String awsSQSEndpoint, String awsSNSEndpoint, boolean isSecure,
 			long receiveCheckIntervalMs, boolean isAsync) {
-		super(awsAccessKey, awsSecretKey, isSecure, receiveCheckIntervalMs, isAsync);
+		super(awsAccessKey, awsSecretKey, awsSQSEndpoint, awsSNSEndpoint, isSecure, receiveCheckIntervalMs, isAsync);
 	}
 
 	@Override

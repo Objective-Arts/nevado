@@ -4,18 +4,12 @@ import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.Protocol;
-import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.AWSCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.auth.InstanceProfileCredentialsProvider;
-import com.amazonaws.services.sns.AmazonSNS;
-import com.amazonaws.services.sns.AmazonSNSAsync;
-import com.amazonaws.services.sns.AmazonSNSAsyncClient;
-import com.amazonaws.services.sns.AmazonSNSClient;
+import com.amazonaws.auth.*;
+import com.amazonaws.client.builder.AwsClientBuilder;
+import com.amazonaws.client.builder.ExecutorFactory;
+import com.amazonaws.services.sns.*;
 import com.amazonaws.services.sns.model.*;
-import com.amazonaws.services.sqs.AmazonSQS;
-import com.amazonaws.services.sqs.AmazonSQSAsyncClient;
-import com.amazonaws.services.sqs.AmazonSQSClient;
+import com.amazonaws.services.sqs.*;
 import com.amazonaws.services.sqs.model.CreateQueueRequest;
 import com.amazonaws.services.sqs.model.CreateQueueResult;
 import com.amazonaws.services.sqs.model.ListQueuesRequest;
@@ -56,11 +50,11 @@ public class AmazonAwsSQSConnector extends AbstractSQSConnector {
     private boolean _testAlwaysPasses = false;
 
 
-    public AmazonAwsSQSConnector(String awsAccessKey, String awsSecretKey, boolean isSecure, long receiveCheckIntervalMs) {
-        this(awsAccessKey, awsSecretKey, isSecure, receiveCheckIntervalMs, false);
+    public AmazonAwsSQSConnector(String awsAccessKey, String awsSecretKey, String awsSQSEndpoint, String awsSNSEndpoint, boolean isSecure, long receiveCheckIntervalMs) {
+        this(awsAccessKey, awsSecretKey, awsSQSEndpoint, awsSNSEndpoint, isSecure, receiveCheckIntervalMs, false);
     }
 
-    public AmazonAwsSQSConnector(String awsAccessKey, String awsSecretKey, boolean isSecure, long receiveCheckIntervalMs, boolean isAsync) {
+    public AmazonAwsSQSConnector(String awsAccessKey, String awsSecretKey, String awsSQSEndpoint, String awsSNSEndpoint, boolean isSecure, long receiveCheckIntervalMs, boolean isAsync) {
         super(receiveCheckIntervalMs, isAsync);
         ClientConfiguration clientConfiguration = new ClientConfiguration();
         String proxyHost = System.getProperty("http.proxyHost");
@@ -72,28 +66,76 @@ public class AmazonAwsSQSConnector extends AbstractSQSConnector {
             }
         }
         clientConfiguration.setProtocol(isSecure ? Protocol.HTTPS : Protocol.HTTP);
+        AwsClientBuilder.EndpointConfiguration awsSQSEndpointConfiguration = new AwsClientBuilder.EndpointConfiguration(awsSQSEndpoint, null);
+        AwsClientBuilder.EndpointConfiguration awsSNSEndpointConfiguration = new AwsClientBuilder.EndpointConfiguration(awsSNSEndpoint, null);
+
         if (isAsync) {
-            ExecutorService executorService = Executors.newSingleThreadExecutor();
+            ExecutorFactory executorFactory = new ExecutorFactory() {
+                @Override
+                public ExecutorService newExecutor() {
+                    return Executors.newSingleThreadExecutor();
+                }
+            };
+
             if(StringUtils.isNotEmpty(awsAccessKey) && StringUtils.isNotEmpty(awsSecretKey)) {
-                AWSCredentials awsCredentials = new BasicAWSCredentials(awsAccessKey, awsSecretKey);
-                _amazonSQS = new AmazonSQSAsyncClient(awsCredentials, clientConfiguration, executorService);
-                _amazonSNS = new AmazonSNSAsyncClient(awsCredentials, clientConfiguration, executorService);
+                BasicAWSCredentials basicAWSCredentials = new BasicAWSCredentials(awsAccessKey, awsSecretKey);
+                _amazonSQS = AmazonSQSAsyncClientBuilder.standard()
+                        .withCredentials(new AWSStaticCredentialsProvider(basicAWSCredentials))
+                        .withClientConfiguration(clientConfiguration)
+                        .withExecutorFactory(executorFactory)
+                        .withEndpointConfiguration(awsSQSEndpointConfiguration)
+                        .build();
+                _amazonSNS = AmazonSNSAsyncClientBuilder.standard()
+                        .withCredentials(new AWSStaticCredentialsProvider(basicAWSCredentials))
+                        .withClientConfiguration(clientConfiguration)
+                        .withExecutorFactory(executorFactory)
+                        .withEndpointConfiguration(awsSNSEndpointConfiguration)
+                        .build();
             }
             else {
-                AWSCredentialsProvider awsCredentialsProvider = new InstanceProfileCredentialsProvider();
-                _amazonSQS = new AmazonSQSAsyncClient(awsCredentialsProvider, clientConfiguration, executorService);
-                _amazonSNS = new AmazonSNSAsyncClient(awsCredentialsProvider, clientConfiguration, executorService);
+                _amazonSQS = AmazonSQSAsyncClientBuilder
+                        .standard()
+                        .withClientConfiguration(clientConfiguration)
+                        .withCredentials(InstanceProfileCredentialsProvider.getInstance())
+                        .withExecutorFactory(executorFactory)
+                        .withEndpointConfiguration(awsSQSEndpointConfiguration)
+                        .build();
+                _amazonSNS = AmazonSNSAsyncClientBuilder
+                        .standard()
+                        .withClientConfiguration(clientConfiguration)
+                        .withCredentials(InstanceProfileCredentialsProvider.getInstance())
+                        .withExecutorFactory(executorFactory)
+                        .withEndpointConfiguration(awsSNSEndpointConfiguration)
+                        .build();
             }
-        } else {
+        }
+        else {
             if(StringUtils.isNotEmpty(awsAccessKey) && StringUtils.isNotEmpty(awsSecretKey)) {
-                AWSCredentials awsCredentials = new BasicAWSCredentials(awsAccessKey, awsSecretKey);
-                _amazonSQS = new AmazonSQSClient(awsCredentials, clientConfiguration);
-                _amazonSNS = new AmazonSNSClient(awsCredentials, clientConfiguration);
+                BasicAWSCredentials basicAWSCredentials = new BasicAWSCredentials(awsAccessKey, awsSecretKey);
+                _amazonSQS = AmazonSQSClientBuilder.standard()
+                    .withCredentials(new AWSStaticCredentialsProvider(basicAWSCredentials))
+                    .withClientConfiguration(clientConfiguration)
+                    .withEndpointConfiguration(awsSQSEndpointConfiguration)
+                    .build();
+                _amazonSNS = AmazonSNSClientBuilder.standard()
+                    .withCredentials(new AWSStaticCredentialsProvider(basicAWSCredentials))
+                    .withClientConfiguration(clientConfiguration)
+                    .withEndpointConfiguration(awsSNSEndpointConfiguration)
+                    .build();
             }
             else {
-                AWSCredentialsProvider awsCredentialsProvider = new InstanceProfileCredentialsProvider();
-                _amazonSQS = new AmazonSQSClient(awsCredentialsProvider, clientConfiguration);
-                _amazonSNS = new AmazonSNSClient(awsCredentialsProvider, clientConfiguration);
+                _amazonSQS = AmazonSQSClientBuilder
+                        .standard()
+                        .withClientConfiguration(clientConfiguration)
+                        .withCredentials(InstanceProfileCredentialsProvider.getInstance())
+                        .withEndpointConfiguration(awsSQSEndpointConfiguration)
+                        .build();
+                _amazonSNS = AmazonSNSClientBuilder
+                        .standard()
+                        .withClientConfiguration(clientConfiguration)
+                        .withCredentials(InstanceProfileCredentialsProvider.getInstance())
+                        .withEndpointConfiguration(awsSNSEndpointConfiguration)
+                        .build();
             }
         }
     }

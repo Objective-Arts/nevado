@@ -11,8 +11,8 @@ import org.skyscreamer.nevado.jms.connector.amazonaws.AmazonAwsSQSConnectorFacto
 public class PlainTextAmazonSQSConnectorFactory extends AmazonAwsSQSConnectorFactory {
 
     @Override
-    protected AmazonAwsSQSConnector createConnector(String awsAccessKey, String awsSecretKey) {
-        return new PlainTextAmazonSQSConnector(awsAccessKey, awsSecretKey, _isSecure, _receiveCheckIntervalMs,
+    protected AmazonAwsSQSConnector createConnector(String awsAccessKey, String awsSecretKey, String awsSQSEndpoint, String awsSNSEndpoint) {
+        return new PlainTextAmazonSQSConnector(awsAccessKey, awsSecretKey, awsSQSEndpoint, awsSNSEndpoint, _isSecure, _receiveCheckIntervalMs,
                 _useAsyncSend);
     }
 
