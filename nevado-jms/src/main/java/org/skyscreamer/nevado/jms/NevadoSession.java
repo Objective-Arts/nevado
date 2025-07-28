@@ -355,8 +355,10 @@ public class NevadoSession implements Session {
         
         if (_connection.getClientID() != null)
         {
-            queueName += "_client-" + _connection.getClientID() + "";
+            queueName += "_" + _connection.getClientID() + "";
         }
+
+        
         return queueName;
     }
 
