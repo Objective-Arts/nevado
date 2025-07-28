@@ -6,7 +6,7 @@ package org.skyscreamer.nevado.jms.destination;
  * @author Carter Page <carter@skyscreamer.org>
  */
 public enum NevadoProviderQueuePrefix {
-    TEMPORARY_DESTINATION_PREFIX("nevado_temp_"), DURABLE_SUBSCRIPTION_PREFIX("nevado_durable_topic_");
+    TEMPORARY_DESTINATION_PREFIX("nevado_temp_"), DURABLE_SUBSCRIPTION_PREFIX("nev_");
 
     private final String _value;
 
