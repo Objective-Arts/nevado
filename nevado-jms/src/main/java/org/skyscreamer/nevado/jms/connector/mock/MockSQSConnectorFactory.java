@@ -3,7 +3,7 @@ package org.skyscreamer.nevado.jms.connector.mock;
 import org.skyscreamer.nevado.jms.connector.SQSConnector;
 import org.skyscreamer.nevado.jms.connector.SQSConnectorFactory;
 
-import javax.jms.ResourceAllocationException;
+import jakarta.jms.ResourceAllocationException;
 
 /**
  * Connector factory for the mock connector.

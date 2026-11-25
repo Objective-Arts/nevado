@@ -2,8 +2,8 @@ package org.skyscreamer.nevado.jms.destination;
 
 import org.skyscreamer.nevado.jms.resource.NevadoReferencableFactory;
 
-import javax.jms.*;
-import javax.jms.IllegalStateException;
+import jakarta.jms.*;
+import jakarta.jms.IllegalStateException;
 import javax.naming.NamingException;
 import javax.naming.Reference;
 import javax.naming.Referenceable;

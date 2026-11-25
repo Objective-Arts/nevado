@@ -2,8 +2,8 @@ package org.skyscreamer.nevado.jms.message;
 
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
-import javax.jms.JMSException;
-import javax.jms.TextMessage;
+import jakarta.jms.JMSException;
+import jakarta.jms.TextMessage;
 
 public class NevadoTextMessage extends NevadoMessage implements TextMessage {
     private String _body;

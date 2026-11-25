@@ -4,7 +4,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.skyscreamer.nevado.jms.AbstractJMSTest;
 
-import javax.jms.*;
+import jakarta.jms.*;
 
 /**
  * Test MessageProducer (JMS 1.1, sec 4.6)

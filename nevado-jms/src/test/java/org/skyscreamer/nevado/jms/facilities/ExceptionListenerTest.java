@@ -7,7 +7,7 @@ import org.skyscreamer.nevado.jms.NevadoSession;
 import org.skyscreamer.nevado.jms.util.TestExceptionListener;
 import org.skyscreamer.nevado.jms.util.TestMessageListener;
 
-import javax.jms.*;
+import jakarta.jms.*;
 
 /**
  * Test JMS 1.1, sec 4.3.8

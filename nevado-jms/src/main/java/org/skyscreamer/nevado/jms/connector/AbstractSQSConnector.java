@@ -14,8 +14,8 @@ import org.skyscreamer.nevado.jms.message.NevadoProperty;
 import org.skyscreamer.nevado.jms.util.MessageIdUtil;
 import org.skyscreamer.nevado.jms.util.SerializeUtil;
 
-import javax.jms.InvalidDestinationException;
-import javax.jms.JMSException;
+import jakarta.jms.InvalidDestinationException;
+import jakarta.jms.JMSException;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Date;

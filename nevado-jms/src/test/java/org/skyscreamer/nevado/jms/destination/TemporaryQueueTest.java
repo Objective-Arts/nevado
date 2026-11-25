@@ -8,7 +8,7 @@ import org.skyscreamer.nevado.jms.NevadoConnectionFactory;
 import org.skyscreamer.nevado.jms.NevadoSession;
 import org.skyscreamer.nevado.jms.util.RandomData;
 
-import javax.jms.*;
+import jakarta.jms.*;
 import java.math.BigInteger;
 import java.util.Collection;
 import java.util.Random;

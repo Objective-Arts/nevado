@@ -6,7 +6,7 @@ import com.amazonaws.services.sqs.model.*;
 import org.skyscreamer.nevado.jms.connector.SQSQueue;
 import org.skyscreamer.nevado.jms.util.MessageIdUtil;
 
-import javax.jms.JMSException;
+import jakarta.jms.JMSException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;

@@ -11,7 +11,7 @@ import org.skyscreamer.nevado.jms.message.NevadoTextMessage;
 import org.skyscreamer.nevado.jms.util.RandomData;
 import org.skyscreamer.nevado.jms.util.TestMessageListener;
 
-import javax.jms.*;
+import jakarta.jms.*;
 
 /**
  * Test message acknowledgement in different modes (JMS 1.1, Sec 4.4.11)

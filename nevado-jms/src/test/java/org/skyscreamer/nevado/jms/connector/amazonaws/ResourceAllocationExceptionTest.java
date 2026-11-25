@@ -8,7 +8,7 @@ import org.skyscreamer.nevado.jms.connector.amazonaws.AmazonAwsSQSConnector;
 import org.skyscreamer.nevado.jms.connector.mock.MockSQSConnector;
 import org.skyscreamer.nevado.jms.util.RandomData;
 
-import javax.jms.*;
+import jakarta.jms.*;
 
 /**
  * Test ResourceAllocationException

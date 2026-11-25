@@ -5,7 +5,7 @@ import org.junit.Test;
 import org.skyscreamer.nevado.jms.AbstractJMSTest;
 import org.skyscreamer.nevado.jms.NevadoConnectionFactory;
 
-import javax.jms.*;
+import jakarta.jms.*;
 
 /**
  * Tests for Client ID (JMS 1.1, Sec. 4.3.2)
@@ -23,7 +23,7 @@ public class ClientIDTest extends AbstractJMSTest {
         Assert.assertEquals(TEST_CLIENT_ID, conn.getClientID());
     }
 
-    @Test(expected = javax.jms.IllegalStateException.class)
+    @Test(expected = jakarta.jms.IllegalStateException.class)
     public void testClientID2() throws JMSException {
         Connection conn = createConnection(getConnectionFactory());
         Assert.assertNull(conn.getClientID());
@@ -48,7 +48,7 @@ public class ClientIDTest extends AbstractJMSTest {
         conn2.setClientID(TEST_CLIENT_ID);
     }
 
-    @Test(expected = javax.jms.IllegalStateException.class)
+    @Test(expected = jakarta.jms.IllegalStateException.class)
     public void testClientID5() throws JMSException {
         Connection conn = createConnection(getConnectionFactory());
         Assert.assertNull(conn.getClientID());

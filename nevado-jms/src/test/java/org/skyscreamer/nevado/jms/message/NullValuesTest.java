@@ -4,7 +4,7 @@ import org.junit.Test;
 import org.skyscreamer.nevado.jms.AbstractJMSTest;
 import org.junit.Assert;
 
-import javax.jms.*;
+import jakarta.jms.*;
 
 /**
  * Tests expected handling of null values in message headers and bodies.

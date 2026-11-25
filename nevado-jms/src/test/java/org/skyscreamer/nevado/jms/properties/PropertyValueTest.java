@@ -5,9 +5,9 @@ import org.junit.Test;
 import org.skyscreamer.nevado.jms.AbstractJMSTest;
 import org.skyscreamer.nevado.jms.destination.NevadoQueue;
 
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.MessageFormatException;
+import jakarta.jms.JMSException;
+import jakarta.jms.Message;
+import jakarta.jms.MessageFormatException;
 import java.util.HashMap;
 
 /**

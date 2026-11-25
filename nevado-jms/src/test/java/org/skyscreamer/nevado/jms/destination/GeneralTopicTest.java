@@ -5,7 +5,7 @@ import org.junit.Test;
 import org.skyscreamer.nevado.jms.*;
 import org.skyscreamer.nevado.jms.util.RandomData;
 
-import javax.jms.*;
+import jakarta.jms.*;
 
 /**
  * General topic checks

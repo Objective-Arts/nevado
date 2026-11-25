@@ -1,6 +1,6 @@
 package org.skyscreamer.nevado.jms.connector;
 
-import javax.jms.JMSException;
+import jakarta.jms.JMSException;
 
 /**
  * Representation of an SQS Queue

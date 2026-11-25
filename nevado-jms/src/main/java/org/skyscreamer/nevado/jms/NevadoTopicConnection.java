@@ -2,7 +2,7 @@ package org.skyscreamer.nevado.jms;
 
 import org.skyscreamer.nevado.jms.connector.SQSConnector;
 
-import javax.jms.*;
+import jakarta.jms.*;
 
 /**
  * Nevado implementation of TopicConnection

@@ -1,7 +1,7 @@
 package org.skyscreamer.nevado.jms.util;
 
-import javax.jms.ExceptionListener;
-import javax.jms.JMSException;
+import jakarta.jms.ExceptionListener;
+import jakarta.jms.JMSException;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 

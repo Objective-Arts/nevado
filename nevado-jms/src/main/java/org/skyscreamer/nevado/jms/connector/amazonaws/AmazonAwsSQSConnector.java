@@ -24,9 +24,9 @@ import org.skyscreamer.nevado.jms.destination.NevadoTopic;
 import org.skyscreamer.nevado.jms.message.JMSXProperty;
 import org.skyscreamer.nevado.jms.message.NevadoMessage;
 
-import javax.jms.JMSException;
-import javax.jms.JMSSecurityException;
-import javax.jms.ResourceAllocationException;
+import jakarta.jms.JMSException;
+import jakarta.jms.JMSSecurityException;
+import jakarta.jms.ResourceAllocationException;
 import javax.net.ssl.SSLException;
 import java.net.MalformedURLException;
 import java.net.URL;

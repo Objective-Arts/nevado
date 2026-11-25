@@ -8,7 +8,7 @@ import org.skyscreamer.nevado.jms.destination.NevadoTopic;
 import org.skyscreamer.nevado.jms.message.JMSXProperty;
 import org.skyscreamer.nevado.jms.message.NevadoMessage;
 
-import javax.jms.JMSException;
+import jakarta.jms.JMSException;
 import java.util.*;
 
 /**

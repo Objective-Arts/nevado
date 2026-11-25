@@ -1,14 +1,14 @@
 package org.skyscreamer.nevado.jms.message;
 
-import org.activemq.message.ActiveMQObjectMessage;
+import org.apache.activemq.command.ActiveMQObjectMessage;
 import org.junit.Assert;
 import org.junit.Test;
 import org.skyscreamer.nevado.jms.AbstractJMSTest;
 import org.skyscreamer.nevado.jms.util.RandomData;
 
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.ObjectMessage;
+import jakarta.jms.JMSException;
+import jakarta.jms.Message;
+import jakarta.jms.ObjectMessage;
 import java.io.Serializable;
 import java.util.*;
 

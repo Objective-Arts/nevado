@@ -3,8 +3,8 @@ package org.skyscreamer.nevado.jms;
 import org.skyscreamer.nevado.jms.destination.NevadoDestination;
 import org.skyscreamer.nevado.jms.message.NevadoMessage;
 
-import javax.jms.*;
-import javax.jms.IllegalStateException;
+import jakarta.jms.*;
+import jakarta.jms.IllegalStateException;
 
 /**
  * Nevado implementation of a MessageProducer.
@@ -20,6 +20,7 @@ public class NevadoMessageProducer implements MessageProducer, QueueSender, Topi
     private int _deliveryMode = Message.DEFAULT_DELIVERY_MODE;
     private int _priority = Message.DEFAULT_PRIORITY;
     private long _ttl = Message.DEFAULT_TIME_TO_LIVE;
+    private long _deliveryDelay = 0;
 
     public NevadoMessageProducer(NevadoSession session, NevadoDestination destination) throws JMSException {
         if (session == null || destination == null) {
@@ -183,5 +184,35 @@ public class NevadoMessageProducer implements MessageProducer, QueueSender, Topi
             throw new IllegalStateException("Only a TopicPublisher can send messages to a queue");
         }
         send((Topic)topic, message, deliveryMode, priority, ttl);
+    }
+
+    // JMS 2.0 additions
+
+    public void setDeliveryDelay(long deliveryDelay) throws JMSException {
+        checkClosed();
+        _deliveryDelay = deliveryDelay;
+    }
+
+    public long getDeliveryDelay() throws JMSException {
+        return _deliveryDelay;
+    }
+
+    public void send(Message message, CompletionListener completionListener) throws JMSException {
+        throw new JMSException("Asynchronous send is not supported by Nevado");
+    }
+
+    public void send(Message message, int deliveryMode, int priority, long timeToLive,
+                     CompletionListener completionListener) throws JMSException {
+        throw new JMSException("Asynchronous send is not supported by Nevado");
+    }
+
+    public void send(Destination destination, Message message, CompletionListener completionListener)
+            throws JMSException {
+        throw new JMSException("Asynchronous send is not supported by Nevado");
+    }
+
+    public void send(Destination destination, Message message, int deliveryMode, int priority, long timeToLive,
+                     CompletionListener completionListener) throws JMSException {
+        throw new JMSException("Asynchronous send is not supported by Nevado");
     }
 }

@@ -3,9 +3,9 @@ package org.skyscreamer.nevado.jms.properties;
 import org.junit.Test;
 import org.skyscreamer.nevado.jms.AbstractJMSTest;
 
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.MessageNotWriteableException;
+import jakarta.jms.JMSException;
+import jakarta.jms.Message;
+import jakarta.jms.MessageNotWriteableException;
 
 /**
  * Test for section 3.5.3 of the JMS 1.1 Specification.

@@ -7,7 +7,7 @@ import org.skyscreamer.nevado.jms.NevadoConnectionFactory;
 import org.skyscreamer.nevado.jms.connector.mock.MockSQSConnectorFactory;
 import org.skyscreamer.nevado.jms.util.RandomData;
 
-import javax.jms.*;
+import jakarta.jms.*;
 
 /**
  * Tests for overriding the endpoints

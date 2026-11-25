@@ -5,7 +5,7 @@ import org.skyscreamer.nevado.jms.connector.SQSQueue;
 import org.skyscreamer.nevado.jms.destination.NevadoQueue;
 import org.skyscreamer.nevado.jms.util.RandomData;
 
-import javax.jms.JMSException;
+import jakarta.jms.JMSException;
 import java.util.LinkedList;
 
 /**
