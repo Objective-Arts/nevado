@@ -6,7 +6,7 @@ import org.skyscreamer.nevado.jms.AbstractJMSTest;
 import org.skyscreamer.nevado.jms.NevadoSession;
 import org.skyscreamer.nevado.jms.destination.NevadoTopic;
 
-import javax.jms.*;
+import jakarta.jms.*;
 
 /**
  * Test JMS 1.1, sec 3.4.1

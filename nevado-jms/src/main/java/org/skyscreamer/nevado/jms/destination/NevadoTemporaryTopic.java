@@ -2,8 +2,8 @@ package org.skyscreamer.nevado.jms.destination;
 
 import org.skyscreamer.nevado.jms.NevadoConnection;
 
-import javax.jms.JMSException;
-import javax.jms.TemporaryTopic;
+import jakarta.jms.JMSException;
+import jakarta.jms.TemporaryTopic;
 import javax.naming.NamingException;
 import javax.naming.Reference;
 

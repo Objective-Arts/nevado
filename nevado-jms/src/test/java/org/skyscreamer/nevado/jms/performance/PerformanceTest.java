@@ -5,7 +5,7 @@ import org.junit.Test;
 import org.skyscreamer.nevado.jms.AbstractJMSTest;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import javax.jms.JMSException;
+import jakarta.jms.JMSException;
 
 /**
  * Stub to run some basic performance tests

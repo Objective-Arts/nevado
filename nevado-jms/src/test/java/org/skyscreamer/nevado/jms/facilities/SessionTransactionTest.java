@@ -9,8 +9,8 @@ import org.skyscreamer.nevado.jms.message.NevadoTextMessage;
 import org.skyscreamer.nevado.jms.message.TestBrokenMessage;
 import org.skyscreamer.nevado.jms.util.RandomData;
 
-import javax.jms.*;
-import javax.jms.IllegalStateException;
+import jakarta.jms.*;
+import jakarta.jms.IllegalStateException;
 
 /**
  * Tests transactional behavior for sessions, per JMS 1.1 Sec. 4.4.7

@@ -1,6 +1,6 @@
 package org.skyscreamer.nevado.jms.util;
 
-import javax.jms.MessageFormatException;
+import jakarta.jms.MessageFormatException;
 
 /**
  * Created by IntelliJ IDEA.

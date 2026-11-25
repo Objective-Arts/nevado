@@ -4,8 +4,8 @@ import org.apache.commons.lang.StringUtils;
 import org.skyscreamer.nevado.jms.connector.SQSConnectorFactory;
 import org.skyscreamer.nevado.jms.resource.NevadoReferencableFactory;
 
-import javax.jms.*;
-import javax.jms.IllegalStateException;
+import jakarta.jms.*;
+import jakarta.jms.IllegalStateException;
 import javax.naming.NamingException;
 import javax.naming.Reference;
 import javax.naming.Referenceable;
@@ -256,5 +256,22 @@ public class NevadoConnectionFactory implements ConnectionFactory, QueueConnecti
             throw new IllegalStateException("SQSConnectorFactory is null, it must be set.");
         }
     }
-}
 
+    // JMS 2.0 simplified API: not supported by Nevado
+
+    public JMSContext createContext() {
+        throw new JMSRuntimeException("createContext() is not supported by Nevado");
+    }
+
+    public JMSContext createContext(String userName, String password) {
+        throw new JMSRuntimeException("createContext() is not supported by Nevado");
+    }
+
+    public JMSContext createContext(String userName, String password, int sessionMode) {
+        throw new JMSRuntimeException("createContext() is not supported by Nevado");
+    }
+
+    public JMSContext createContext(int sessionMode) {
+        throw new JMSRuntimeException("createContext() is not supported by Nevado");
+    }
+}

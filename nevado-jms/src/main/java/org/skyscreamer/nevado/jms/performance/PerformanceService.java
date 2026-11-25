@@ -4,7 +4,7 @@ import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import javax.jms.*;
+import jakarta.jms.*;
 
 /**
  * Runs a sample of messages to analyze send/receive performance

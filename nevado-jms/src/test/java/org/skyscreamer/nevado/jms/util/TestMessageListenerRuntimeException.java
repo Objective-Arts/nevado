@@ -1,6 +1,6 @@
 package org.skyscreamer.nevado.jms.util;
 
-import javax.jms.Message;
+import jakarta.jms.Message;
 
 /**
  * Test MessageListener.  Throws exception on the first onMessage()

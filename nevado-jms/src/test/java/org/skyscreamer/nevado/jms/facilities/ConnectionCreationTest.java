@@ -5,8 +5,8 @@ import org.junit.Test;
 import org.skyscreamer.nevado.jms.AbstractJMSTest;
 import org.skyscreamer.nevado.jms.connector.amazonaws.AmazonAwsSQSConnector;
 
-import javax.jms.JMSException;
-import javax.jms.JMSSecurityException;
+import jakarta.jms.JMSException;
+import jakarta.jms.JMSSecurityException;
 
 /**
  * Tests creation of a connection (JMS 1.1, Sec. 4.3.1)

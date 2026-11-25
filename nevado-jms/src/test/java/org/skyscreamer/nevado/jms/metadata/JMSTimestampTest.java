@@ -5,7 +5,7 @@ import org.junit.Test;
 import org.skyscreamer.nevado.jms.AbstractJMSTest;
 import org.skyscreamer.nevado.jms.NevadoSession;
 
-import javax.jms.*;
+import jakarta.jms.*;
 import java.util.Date;
 
 /**

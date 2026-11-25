@@ -6,8 +6,8 @@ import org.apache.commons.logging.LogFactory;
 import org.skyscreamer.nevado.jms.connector.SQSConnector;
 import org.skyscreamer.nevado.jms.destination.*;
 
-import javax.jms.*;
-import javax.jms.IllegalStateException;
+import jakarta.jms.*;
+import jakarta.jms.IllegalStateException;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -372,5 +372,29 @@ public class NevadoConnection implements Connection {
     
     public String getDurableSubcriptionPrefixOveride() {
         return _durableSubcriptionPrefixOveride;
+    }
+
+    // JMS 2.0 additions
+
+    public NevadoSession createSession(int sessionMode) throws JMSException {
+        return createSession(sessionMode == Session.SESSION_TRANSACTED, sessionMode);
+    }
+
+    public NevadoSession createSession() throws JMSException {
+        return createSession(false, Session.AUTO_ACKNOWLEDGE);
+    }
+
+    public ConnectionConsumer createSharedConnectionConsumer(Topic topic, String subscriptionName,
+                                                             String messageSelector,
+                                                             ServerSessionPool sessionPool, int maxMessages)
+            throws JMSException {
+        throw new JMSException("createSharedConnectionConsumer() is not supported by Nevado");
+    }
+
+    public ConnectionConsumer createSharedDurableConnectionConsumer(Topic topic, String subscriptionName,
+                                                                    String messageSelector,
+                                                                    ServerSessionPool sessionPool, int maxMessages)
+            throws JMSException {
+        throw new JMSException("createSharedDurableConnectionConsumer() is not supported by Nevado");
     }
 }

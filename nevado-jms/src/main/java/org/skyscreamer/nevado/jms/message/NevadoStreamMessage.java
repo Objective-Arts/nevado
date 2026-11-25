@@ -5,7 +5,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.skyscreamer.nevado.jms.util.MarshallingSupport;
 
-import javax.jms.*;
+import jakarta.jms.*;
 import java.io.*;
 
 /**
@@ -93,7 +93,7 @@ public class NevadoStreamMessage extends NevadoMessage implements StreamMessage 
      *             if unexpected end of message stream has been reached.
      * @throws MessageFormatException
      *             if this type conversion is invalid.
-     * @throws javax.jms.MessageNotReadableException
+     * @throws jakarta.jms.MessageNotReadableException
      *             if the message is in write-only mode.
      */
     public boolean readBoolean() throws JMSException {
@@ -141,7 +141,7 @@ public class NevadoStreamMessage extends NevadoMessage implements StreamMessage 
      *             if unexpected end of message stream has been reached.
      * @throws MessageFormatException
      *             if this type conversion is invalid.
-     * @throws javax.jms.MessageNotReadableException
+     * @throws jakarta.jms.MessageNotReadableException
      *             if the message is in write-only mode.
      */
 

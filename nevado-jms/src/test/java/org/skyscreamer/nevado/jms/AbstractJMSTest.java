@@ -19,7 +19,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.support.DependencyInjectionTestExecutionListener;
 import org.springframework.test.context.transaction.TransactionalTestExecutionListener;
 
-import javax.jms.*;
+import jakarta.jms.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;

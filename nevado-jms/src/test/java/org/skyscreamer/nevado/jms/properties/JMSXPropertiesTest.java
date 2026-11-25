@@ -6,8 +6,8 @@ import org.skyscreamer.nevado.jms.AbstractJMSTest;
 import org.skyscreamer.nevado.jms.message.JMSXProperty;
 import org.skyscreamer.nevado.jms.message.NevadoMessage;
 
-import javax.jms.ConnectionMetaData;
-import javax.jms.JMSException;
+import jakarta.jms.ConnectionMetaData;
+import jakarta.jms.JMSException;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Set;

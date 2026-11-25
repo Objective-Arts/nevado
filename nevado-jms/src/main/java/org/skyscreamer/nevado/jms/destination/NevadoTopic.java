@@ -1,7 +1,7 @@
 package org.skyscreamer.nevado.jms.destination;
 
-import javax.jms.*;
-import javax.jms.IllegalStateException;
+import jakarta.jms.*;
+import jakarta.jms.IllegalStateException;
 import java.io.Serializable;
 import java.net.URL;
 import java.util.*;

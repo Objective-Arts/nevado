@@ -7,7 +7,7 @@ import org.skyscreamer.nevado.jms.NevadoConnection;
 import org.skyscreamer.nevado.jms.NevadoConnectionFactory;
 import org.skyscreamer.nevado.jms.NevadoSession;
 
-import javax.jms.*;
+import jakarta.jms.*;
 import java.io.IOException;
 
 /**

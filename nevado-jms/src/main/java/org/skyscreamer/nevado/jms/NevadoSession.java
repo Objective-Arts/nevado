@@ -6,9 +6,9 @@ import org.skyscreamer.nevado.jms.destination.*;
 import org.skyscreamer.nevado.jms.message.*;
 import org.skyscreamer.nevado.jms.util.MessageIdUtil;
 
-import javax.jms.*;
-import javax.jms.IllegalStateException;
-import javax.jms.Queue;
+import jakarta.jms.*;
+import jakarta.jms.IllegalStateException;
+import jakarta.jms.Queue;
 import java.io.Serializable;
 import java.util.*;
 
@@ -619,5 +619,34 @@ public class NevadoSession implements Session {
         {
             throw new JMSException("SESSION DELIBERATELY THROWING EXCEPTION - EXPECTED BEHAVIOR - FOR TESTING MODE ONLY");
         }
+    }
+
+    // JMS 2.0 additions: shared and durable consumers are not supported by Nevado
+
+    public MessageConsumer createSharedConsumer(Topic topic, String sharedSubscriptionName) throws JMSException {
+        throw new JMSException("createSharedConsumer() is not supported by Nevado");
+    }
+
+    public MessageConsumer createSharedConsumer(Topic topic, String sharedSubscriptionName, String messageSelector)
+            throws JMSException {
+        throw new JMSException("createSharedConsumer() is not supported by Nevado");
+    }
+
+    public MessageConsumer createDurableConsumer(Topic topic, String name) throws JMSException {
+        throw new JMSException("createDurableConsumer() is not supported by Nevado");
+    }
+
+    public MessageConsumer createDurableConsumer(Topic topic, String name, String messageSelector, boolean noLocal)
+            throws JMSException {
+        throw new JMSException("createDurableConsumer() is not supported by Nevado");
+    }
+
+    public MessageConsumer createSharedDurableConsumer(Topic topic, String name) throws JMSException {
+        throw new JMSException("createSharedDurableConsumer() is not supported by Nevado");
+    }
+
+    public MessageConsumer createSharedDurableConsumer(Topic topic, String name, String messageSelector)
+            throws JMSException {
+        throw new JMSException("createSharedDurableConsumer() is not supported by Nevado");
     }
 }

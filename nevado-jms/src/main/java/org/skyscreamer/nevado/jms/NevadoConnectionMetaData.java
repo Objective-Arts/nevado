@@ -3,8 +3,8 @@ package org.skyscreamer.nevado.jms;
 import org.apache.commons.lang.StringUtils;
 import org.skyscreamer.nevado.jms.message.JMSXProperty;
 
-import javax.jms.ConnectionMetaData;
-import javax.jms.JMSException;
+import jakarta.jms.ConnectionMetaData;
+import jakarta.jms.JMSException;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Vector;

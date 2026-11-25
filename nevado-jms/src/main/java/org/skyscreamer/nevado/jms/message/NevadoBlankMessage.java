@@ -1,7 +1,7 @@
 package org.skyscreamer.nevado.jms.message;
 
-import javax.jms.JMSException;
-import javax.jms.Message;
+import jakarta.jms.JMSException;
+import jakarta.jms.Message;
 
 /**
  * Created by IntelliJ IDEA.

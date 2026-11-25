@@ -9,7 +9,7 @@ import org.skyscreamer.nevado.jms.message.JMSXProperty;
 import org.skyscreamer.nevado.jms.message.NevadoTextMessage;
 import org.skyscreamer.nevado.jms.util.RandomData;
 
-import javax.jms.*;
+import jakarta.jms.*;
 
 public class JMSXDeliveryCountTest extends AbstractJMSTest {
     @Test

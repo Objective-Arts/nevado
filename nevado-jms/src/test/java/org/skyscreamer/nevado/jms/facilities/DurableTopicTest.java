@@ -8,7 +8,7 @@ import org.skyscreamer.nevado.jms.NevadoSession;
 import org.skyscreamer.nevado.jms.destination.NevadoTopic;
 import org.skyscreamer.nevado.jms.util.RandomData;
 
-import javax.jms.*;
+import jakarta.jms.*;
 
 /**
  * Tests for durable topics

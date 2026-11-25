@@ -3,8 +3,8 @@ package org.skyscreamer.nevado.jms.destination;
 import org.skyscreamer.nevado.jms.NevadoConnection;
 import org.skyscreamer.nevado.jms.NevadoSession;
 
-import javax.jms.JMSException;
-import javax.jms.TemporaryQueue;
+import jakarta.jms.JMSException;
+import jakarta.jms.TemporaryQueue;
 import javax.naming.NamingException;
 import javax.naming.Reference;
 

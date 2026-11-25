@@ -4,7 +4,7 @@ import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import javax.jms.*;
+import jakarta.jms.*;
 import java.io.*;
 
 /**

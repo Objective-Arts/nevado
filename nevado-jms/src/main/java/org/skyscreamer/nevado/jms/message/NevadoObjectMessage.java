@@ -3,8 +3,8 @@ package org.skyscreamer.nevado.jms.message;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.skyscreamer.nevado.jms.util.SerializeUtil;
 
-import javax.jms.JMSException;
-import javax.jms.ObjectMessage;
+import jakarta.jms.JMSException;
+import jakarta.jms.ObjectMessage;
 import java.io.IOException;
 import java.io.Serializable;
 

@@ -6,7 +6,7 @@ import org.skyscreamer.nevado.jms.message.JMSXProperty;
 import org.skyscreamer.nevado.jms.message.NevadoMessage;
 import org.skyscreamer.nevado.jms.message.NevadoProperty;
 
-import javax.jms.*;
+import jakarta.jms.*;
 import java.util.Enumeration;
 
 /**

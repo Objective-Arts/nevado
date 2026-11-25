@@ -1,12 +1,12 @@
 package org.skyscreamer.nevado.jms.message;
 
-import org.activemq.message.ActiveMQStreamMessage;
+import org.apache.activemq.command.ActiveMQStreamMessage;
 import org.junit.Assert;
 import org.junit.Test;
 import org.skyscreamer.nevado.jms.AbstractJMSTest;
 import org.skyscreamer.nevado.jms.util.RandomData;
 
-import javax.jms.*;
+import jakarta.jms.*;
 import java.util.Arrays;
 
 /**

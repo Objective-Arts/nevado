@@ -3,8 +3,8 @@ package org.skyscreamer.nevado.jms.message;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.skyscreamer.nevado.jms.util.CharWrapper;
 
-import javax.jms.JMSException;
-import javax.jms.MapMessage;
+import jakarta.jms.JMSException;
+import jakarta.jms.MapMessage;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;

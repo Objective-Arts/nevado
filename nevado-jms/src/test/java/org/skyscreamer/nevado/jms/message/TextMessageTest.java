@@ -1,6 +1,6 @@
 package org.skyscreamer.nevado.jms.message;
 
-import org.activemq.message.ActiveMQTextMessage;
+import org.apache.activemq.command.ActiveMQTextMessage;
 import org.junit.Assert;
 import org.junit.Test;
 import org.skyscreamer.nevado.jms.AbstractJMSTest;
@@ -8,9 +8,9 @@ import org.skyscreamer.nevado.jms.util.RandomData;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.TextMessage;
+import jakarta.jms.JMSException;
+import jakarta.jms.Message;
+import jakarta.jms.TextMessage;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.xpath.XPath;

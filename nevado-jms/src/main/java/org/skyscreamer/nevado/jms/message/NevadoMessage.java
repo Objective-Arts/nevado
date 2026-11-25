@@ -3,9 +3,9 @@ package org.skyscreamer.nevado.jms.message;
 import org.skyscreamer.nevado.jms.NevadoSession;
 import org.skyscreamer.nevado.jms.destination.NevadoDestination;
 
-import javax.jms.*;
-import javax.jms.IllegalStateException;
-import javax.jms.Message;
+import jakarta.jms.*;
+import jakarta.jms.IllegalStateException;
+import jakarta.jms.Message;
 import java.util.Enumeration;
 
 /**

@@ -6,7 +6,7 @@ import org.junit.Test;
 import org.skyscreamer.nevado.jms.NevadoConnectionFactory;
 import org.skyscreamer.nevado.jms.util.RandomData;
 
-import javax.jms.*;
+import jakarta.jms.*;
 
 public class ConnectionFactoryResetTest {
     private static final String ACCESS_KEY = "ACCESS_KEY";

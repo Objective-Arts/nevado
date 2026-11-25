@@ -8,7 +8,7 @@ import org.skyscreamer.nevado.jms.NevadoSession;
 import org.skyscreamer.nevado.jms.util.RandomData;
 import org.skyscreamer.nevado.jms.util.TestMessageListener;
 
-import javax.jms.*;
+import jakarta.jms.*;
 
 /**
  * Tests starting and stopping connections (JMS 1.1, Sec. 4.3.3 & 4.3.4)

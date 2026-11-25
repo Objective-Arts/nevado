@@ -3,7 +3,7 @@ package org.skyscreamer.nevado.jms.message;
 import org.skyscreamer.nevado.jms.util.CharWrapper;
 import org.skyscreamer.nevado.jms.util.PropertyConvertUtil;
 
-import javax.jms.MessageFormatException;
+import jakarta.jms.MessageFormatException;
 
 /**
  * Created by IntelliJ IDEA.

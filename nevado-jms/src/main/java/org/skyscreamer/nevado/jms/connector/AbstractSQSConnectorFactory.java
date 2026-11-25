@@ -3,7 +3,7 @@ package org.skyscreamer.nevado.jms.connector;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import javax.jms.JMSException;
+import jakarta.jms.JMSException;
 
 /**
  * Abstract implementation of factory for SQSConnector objects.

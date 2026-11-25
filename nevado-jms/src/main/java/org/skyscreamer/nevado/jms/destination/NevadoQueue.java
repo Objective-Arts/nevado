@@ -1,7 +1,7 @@
 package org.skyscreamer.nevado.jms.destination;
 
-import javax.jms.JMSException;
-import javax.jms.Queue;
+import jakarta.jms.JMSException;
+import jakarta.jms.Queue;
 import java.net.URL;
 
 /**

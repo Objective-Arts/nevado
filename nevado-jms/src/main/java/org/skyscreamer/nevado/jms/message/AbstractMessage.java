@@ -3,7 +3,7 @@ package org.skyscreamer.nevado.jms.message;
 import org.skyscreamer.nevado.jms.util.PropertyConvertUtil;
 import org.skyscreamer.nevado.jms.util.SerializeUtil;
 
-import javax.jms.*;
+import jakarta.jms.*;
 import java.io.IOException;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
@@ -37,6 +37,8 @@ public abstract class AbstractMessage<T> implements Message, Serializable {
     private int _priority = 0;
     private boolean _readOnlyProperties = false;
     private boolean _readOnlyBody = false;
+    // Transient so that the serialized (Hessian) form of a message stays unchanged
+    private transient long _deliveryTime = 0;
 
     public String getJMSMessageID() throws JMSException {
         return _messageID;
@@ -310,5 +312,23 @@ public abstract class AbstractMessage<T> implements Message, Serializable {
         catch(IOException e) {
             throw new JMSException("Unable to make copy of messsage: " + e.getMessage());
         }
+    }
+
+    // JMS 2.0 additions
+
+    public long getJMSDeliveryTime() throws JMSException {
+        return _deliveryTime;
+    }
+
+    public void setJMSDeliveryTime(long deliveryTime) throws JMSException {
+        _deliveryTime = deliveryTime;
+    }
+
+    public <B> B getBody(Class<B> c) throws JMSException {
+        throw new JMSException("getBody() is not supported by Nevado");
+    }
+
+    public boolean isBodyAssignableTo(Class c) throws JMSException {
+        throw new JMSException("isBodyAssignableTo() is not supported by Nevado");
     }
 }
