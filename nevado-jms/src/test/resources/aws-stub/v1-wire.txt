@@ -1,0 +1,107 @@
+## test()
+SQS ListQueues
+SNS ListTopics
+## getSQSQueue
+SQS CreateQueue
+    QueueName=nevado-stub-queue
+=> queueUrl: http://STUB/123456789012/nevado-stub-queue
+## getSQSQueue again (url known)
+=> messageId: stub-msg-1
+## sendMessage
+SQS SendMessage
+    MessageBody=h\u00e9llo & <x> + 100% = "q" 'a'\n\tline2 \u65e5\u672c \ud83d\ude00 a=b&c=d \\ /
+    QueueUrl=http://STUB/123456789012/nevado-stub-queue
+=> serialized: cAIAQzA0b3JnLnNreXNjcmVhbWVyLm5ldmFkby5qbXMubWVzc2FnZS5OZXZhZG9UZXh0TWVzc2FnZZ4FX2JvZHkKX21lc3NhZ2VJRApfdGltZXN0YW1wDl9jb3JyZWxhdGlvbklEDV9kZWxpdmVyeU1vZGUMX3JlZGVsaXZlcmVkBV90eXBlC19leHBpcmF0aW9uCV9wcmlvcml0eRNfcmVhZE9ubHlQcm9wZXJ0aWVzDV9yZWFkT25seUJvZHkLX3Byb3BlcnRpZXMLX2ptc1JlcGx5VG8MX2Rlc3RpbmF0aW9uYDA1aMOpbGxvICYgPHg+ICsgMTAwJSA9ICJxIiAnYScKCWxpbmUyIOaXpeacrCDtoL3tuIAgYT1iJmM9ZCBcIC8LSUQ6Zml4ZWQtaWTgTpJGTuCQRkZIBWNvbG9yBGJsdWVaTk56
+## receiveMessage
+SQS ReceiveMessage
+    AttributeName.1=ApproximateReceiveCount
+    QueueUrl=http://STUB/123456789012/nevado-stub-queue
+=> received: stub-msg-1 rh-stub-msg-1-1 {ApproximateReceiveCount=1} true
+## deleteMessage
+SQS DeleteMessage
+    QueueUrl=http://STUB/123456789012/nevado-stub-queue
+    ReceiptHandle=rh-stub-msg-1-1
+## receiveMessage (nevado body)
+SQS ReceiveMessage
+    AttributeName.1=ApproximateReceiveCount
+    QueueUrl=http://STUB/123456789012/nevado-stub-queue
+=> converted: NevadoTextMessage ID:fixed-id true blue 1
+## setMessageVisibilityTimeout
+SQS ChangeMessageVisibility
+    QueueUrl=http://STUB/123456789012/nevado-stub-queue
+    ReceiptHandle=rh-stub-msg-2-1
+    VisibilityTimeout=0
+=> redelivered: stub-msg-2 {ApproximateReceiveCount=2}
+=> empty: null
+## receive, delete, receive
+SQS ReceiveMessage
+    AttributeName.1=ApproximateReceiveCount
+    QueueUrl=http://STUB/123456789012/nevado-stub-queue
+SQS DeleteMessage
+    QueueUrl=http://STUB/123456789012/nevado-stub-queue
+    ReceiptHandle=rh-stub-msg-2-2
+SQS ReceiveMessage
+    AttributeName.1=ApproximateReceiveCount
+    QueueUrl=http://STUB/123456789012/nevado-stub-queue
+=> queueArn: arn:aws:sqs:us-east-1:123456789012:nevado-stub-queue
+## getQueueARN
+SQS GetQueueAttributes
+    AttributeName.1=QueueArn
+    QueueUrl=http://STUB/123456789012/nevado-stub-queue
+## createQueue x2
+SQS CreateQueue
+    QueueName=nevado-temp-one
+SQS CreateQueue
+    QueueName=nevado-temp-two
+=> listQueues: [null (nevado-temp-one), null (nevado-temp-two)]
+## listQueues(prefix)
+SQS ListQueues
+    QueueNamePrefix=nevado-temp-
+## createTopic
+SNS CreateTopic
+    Name=nevado-stub-topic
+=> topicArn: arn:aws:sns:us-east-1:123456789012:nevado-stub-topic
+## sendSNSMessage
+SNS Publish
+    Message=h\u00e9llo & <x> + 100% = "q" 'a'\n\tline2 \u65e5\u672c \ud83d\ude00 a=b&c=d \\ /
+    TopicArn=arn:aws:sns:us-east-1:123456789012:nevado-stub-topic
+=> listTopics: [stub-topic-a arn=null, stub-topic-b arn=null]
+## listTopics
+SNS ListTopics
+## subscribe
+SQS CreateQueue
+    QueueName=nevado-stub-endpoint
+SQS GetQueueAttributes
+    AttributeName.1=QueueArn
+    QueueUrl=http://STUB/123456789012/nevado-stub-endpoint
+SQS SetQueueAttributes
+    Attribute.1.Name=Policy
+    Attribute.1.Value={ \n    "Version":"2008-10-17", \n    "Id":"arn:aws:sqs:us-east-1:123456789012:nevado-stub-endpoint", \n    "Statement": [ \n        { \n            "Sid":"arn:aws:sqs:us-east-1:123456789012:nevado-stub-endpoint/statementId", \n            "Effect":"Allow", \n            "Principal":{"AWS":"*"}, \n            "Action":"SQS:SendMessage", \n            "Resource": "arn:aws:sqs:us-east-1:123456789012:nevado-stub-endpoint", \n            "Condition":{ \n                "StringEquals":{"aws:SourceArn":"arn:aws:sns:us-east-1:123456789012:nevado-stub-topic"} \n            } \n        } \n    ] \n}
+    QueueUrl=http://STUB/123456789012/nevado-stub-endpoint
+SNS Subscribe
+    Endpoint=arn:aws:sqs:us-east-1:123456789012:nevado-stub-endpoint
+    Protocol=sqs
+    TopicArn=arn:aws:sns:us-east-1:123456789012:nevado-stub-topic
+=> subscriptionArn: arn:aws:sns:us-east-1:123456789012:nevado-stub-topic:stub-subscription
+## unsubscribe
+SNS Unsubscribe
+    SubscriptionArn=arn:aws:sns:us-east-1:123456789012:nevado-stub-topic:stub-subscription
+## deleteTopic
+SNS DeleteTopic
+    TopicArn=arn:aws:sns:us-east-1:123456789012:nevado-stub-topic
+## deleteQueue
+SQS DeleteQueue
+    QueueUrl=http://STUB/123456789012/nevado-stub-queue
+=> failure test() with a bad key: jakarta.jms.JMSSecurityException: Connection test failed: The security token included in the request is invalid. (Service: AmazonSQS; Status Code: 403; Error Code: InvalidClientTokenId; Request ID: stub-request-id; Proxy: null)
+## test() with a bad key
+SQS ListQueues
+=> failure sendMessage to a missing queue: jakarta.jms.JMSException: Unable to send message to queue http://STUB/123456789012/nevado-stub-queue: The specified queue does not exist for this wsdl version. (Service: AmazonSQS; Status Code: 400; Error Code: AWS.SimpleQueueService.NonExistentQueue; Request ID: stub-request-id; Proxy: null)
+## sendMessage to a missing queue
+SQS SendMessage
+    MessageBody=x
+    QueueUrl=http://STUB/123456789012/nevado-stub-queue
+=> failure sendSNSMessage not authorized: jakarta.jms.JMSException: Unable to send message to topic: arn:aws:sns:us-east-1:123456789012:nevado-stub-topic: User is not authorized to perform: SNS:Publish (Service: AmazonSNS; Status Code: 403; Error Code: AuthorizationError; Request ID: stub-request-id; Proxy: null)
+## sendSNSMessage not authorized
+SNS Publish
+    Message=x
+    TopicArn=arn:aws:sns:us-east-1:123456789012:nevado-stub-topic

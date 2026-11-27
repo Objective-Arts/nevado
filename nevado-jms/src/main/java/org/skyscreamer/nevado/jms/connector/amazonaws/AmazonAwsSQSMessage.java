@@ -1,6 +1,6 @@
 package org.skyscreamer.nevado.jms.connector.amazonaws;
 
-import com.amazonaws.services.sqs.model.Message;
+import software.amazon.awssdk.services.sqs.model.Message;
 import org.skyscreamer.nevado.jms.connector.SQSMessage;
 
 import java.util.Map;
@@ -19,21 +19,21 @@ public class AmazonAwsSQSMessage implements SQSMessage {
 
     @Override
     public String getReceiptHandle() {
-        return _message.getReceiptHandle();
+        return _message.receiptHandle();
     }
 
     @Override
     public String getMessageBody() {
-        return _message.getBody();
+        return _message.body();
     }
 
     @Override
     public String getMessageId() {
-        return _message.getMessageId();
+        return _message.messageId();
     }
 
     @Override
     public Map<String, String> getAttributes() {
-        return _message.getAttributes();
+        return _message.attributesAsStrings();
     }
 }

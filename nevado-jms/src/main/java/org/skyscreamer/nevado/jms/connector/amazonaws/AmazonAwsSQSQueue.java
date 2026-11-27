@@ -1,8 +1,15 @@
 package org.skyscreamer.nevado.jms.connector.amazonaws;
 
-import com.amazonaws.AmazonClientException;
-import com.amazonaws.services.sqs.AmazonSQSAsync;
-import com.amazonaws.services.sqs.model.*;
+import software.amazon.awssdk.core.exception.SdkException;
+import software.amazon.awssdk.services.sqs.model.ChangeMessageVisibilityRequest;
+import software.amazon.awssdk.services.sqs.model.DeleteMessageRequest;
+import software.amazon.awssdk.services.sqs.model.DeleteQueueRequest;
+import software.amazon.awssdk.services.sqs.model.GetQueueAttributesRequest;
+import software.amazon.awssdk.services.sqs.model.Message;
+import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest;
+import software.amazon.awssdk.services.sqs.model.ReceiveMessageResponse;
+import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
+import software.amazon.awssdk.services.sqs.model.SetQueueAttributesRequest;
 import org.skyscreamer.nevado.jms.connector.SQSQueue;
 import org.skyscreamer.nevado.jms.util.MessageIdUtil;
 
@@ -36,16 +43,16 @@ public class AmazonAwsSQSQueue implements SQSQueue {
     @Override
     public String sendMessage(String serializedMessage) throws JMSException {
         String messageId;
-        SendMessageRequest request = new SendMessageRequest(_queueUrl, serializedMessage);
+        final SendMessageRequest request = SendMessageRequest.builder().queueUrl(_queueUrl).messageBody(serializedMessage).build();
         try {
             if (_isAsync) {
-                ((AmazonSQSAsync)_amazonAwsSQSConnector.getAmazonSQS()).sendMessageAsync(request);
+                _amazonAwsSQSConnector.getSQSExecutor().submit(() -> _amazonAwsSQSConnector.getAmazonSQS().sendMessage(request));
                 messageId = null;
             } else {
-                messageId = _amazonAwsSQSConnector.getAmazonSQS().sendMessage(request).getMessageId();
+                messageId = _amazonAwsSQSConnector.getAmazonSQS().sendMessage(request).messageId();
             }
         }
-        catch (AmazonClientException e) {
+        catch (SdkException e) {
             throw _amazonAwsSQSConnector.handleAWSException("Unable to send message to queue " + _queueUrl, e);
         }
         return messageId;
@@ -54,9 +61,10 @@ public class AmazonAwsSQSQueue implements SQSQueue {
     @Override
     public void setMessageVisibilityTimeout(String sqsReceiptHandle, int timeout) throws JMSException {
         try {
-            _amazonAwsSQSConnector.getAmazonSQS().changeMessageVisibility(new ChangeMessageVisibilityRequest(_queueUrl, sqsReceiptHandle, timeout));
+            _amazonAwsSQSConnector.getAmazonSQS().changeMessageVisibility(ChangeMessageVisibilityRequest.builder()
+                    .queueUrl(_queueUrl).receiptHandle(sqsReceiptHandle).visibilityTimeout(timeout).build());
         }
-        catch (AmazonClientException e) {
+        catch (SdkException e) {
             throw _amazonAwsSQSConnector.handleAWSException("Unable to reset message visibility for message "
                     + "with receipt handle " + sqsReceiptHandle, e);
         }
@@ -64,12 +72,12 @@ public class AmazonAwsSQSQueue implements SQSQueue {
 
     @Override
     public String getQueueARN() throws JMSException {
-        GetQueueAttributesRequest request = new GetQueueAttributesRequest(_queueUrl).withAttributeNames(ATTRIBUTE_QUEUE_ARN);
+        GetQueueAttributesRequest request = GetQueueAttributesRequest.builder().queueUrl(_queueUrl).attributeNamesWithStrings(ATTRIBUTE_QUEUE_ARN).build();
         Map<String, String> queueAttributes;
         try {
-            queueAttributes = _amazonAwsSQSConnector.getAmazonSQS().getQueueAttributes(request).getAttributes();
+            queueAttributes = _amazonAwsSQSConnector.getAmazonSQS().getQueueAttributes(request).attributesAsStrings();
         }
-        catch (AmazonClientException e) {
+        catch (SdkException e) {
             throw _amazonAwsSQSConnector.handleAWSException("Unable to get queue ARN for queue " + _queueUrl, e);
         }
         return queueAttributes.get(ATTRIBUTE_QUEUE_ARN);
@@ -78,8 +86,9 @@ public class AmazonAwsSQSQueue implements SQSQueue {
     @Override
     public void setPolicy(String policy) throws JMSException {
         try {
-            _amazonAwsSQSConnector.getAmazonSQS().setQueueAttributes(new SetQueueAttributesRequest(_queueUrl, Collections.singletonMap(ATTRIBUTE_POLICY, policy)));
-        } catch (AmazonClientException e) {
+            _amazonAwsSQSConnector.getAmazonSQS().setQueueAttributes(SetQueueAttributesRequest.builder().queueUrl(_queueUrl)
+                    .attributesWithStrings(Collections.singletonMap(ATTRIBUTE_POLICY, policy)).build());
+        } catch (SdkException e) {
             throw _amazonAwsSQSConnector.handleAWSException("Unable to set policy", e);
         }
     }
@@ -87,8 +96,8 @@ public class AmazonAwsSQSQueue implements SQSQueue {
     @Override
     public void deleteMessage(String sqsReceiptHandle) throws JMSException {
         try {
-            _amazonAwsSQSConnector.getAmazonSQS().deleteMessage(new DeleteMessageRequest(_queueUrl, sqsReceiptHandle));
-        } catch (AmazonClientException e) {
+            _amazonAwsSQSConnector.getAmazonSQS().deleteMessage(DeleteMessageRequest.builder().queueUrl(_queueUrl).receiptHandle(sqsReceiptHandle).build());
+        } catch (SdkException e) {
             throw _amazonAwsSQSConnector.handleAWSException("Unable to delete message with receipt handle " + sqsReceiptHandle, e);
         }
     }
@@ -97,12 +106,12 @@ public class AmazonAwsSQSQueue implements SQSQueue {
     public AmazonAwsSQSMessage receiveMessage() throws JMSException {
         AmazonAwsSQSMessage sqsMessage;
         try {
-            ReceiveMessageRequest request = new ReceiveMessageRequest(_queueUrl)
-                    .withAttributeNames(AmazonAwsSQSConnector.MESSAGE_ATTRIBUTE_APPROXIMATE_RECEIVE_COUNT);
-            ReceiveMessageResult result = _amazonAwsSQSConnector.getAmazonSQS().receiveMessage(request);
-            List<Message> messages = result.getMessages();
+            ReceiveMessageRequest request = ReceiveMessageRequest.builder().queueUrl(_queueUrl)
+                    .attributeNamesWithStrings(AmazonAwsSQSConnector.MESSAGE_ATTRIBUTE_APPROXIMATE_RECEIVE_COUNT).build();
+            ReceiveMessageResponse result = _amazonAwsSQSConnector.getAmazonSQS().receiveMessage(request);
+            List<Message> messages = result.messages();
             sqsMessage = (messages != null && messages.size() > 0) ? new AmazonAwsSQSMessage(messages.get(0)) : null;
-        } catch (AmazonClientException e) {
+        } catch (SdkException e) {
             throw _amazonAwsSQSConnector.handleAWSException("Unable to retrieve message from queue " + _queueUrl, e);
         }
         return sqsMessage;
@@ -111,8 +120,8 @@ public class AmazonAwsSQSQueue implements SQSQueue {
     @Override
     public void deleteQueue() throws JMSException {
         try {
-            _amazonAwsSQSConnector.getAmazonSQS().deleteQueue(new DeleteQueueRequest(_queueUrl));
-        } catch (AmazonClientException e) {
+            _amazonAwsSQSConnector.getAmazonSQS().deleteQueue(DeleteQueueRequest.builder().queueUrl(_queueUrl).build());
+        } catch (SdkException e) {
             throw _amazonAwsSQSConnector.handleAWSException("Unable to delete message queue '" + _queueUrl, e);
         }
     }
