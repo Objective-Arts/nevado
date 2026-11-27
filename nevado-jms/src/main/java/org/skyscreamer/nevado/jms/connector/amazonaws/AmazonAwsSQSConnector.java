@@ -1,19 +1,32 @@
 package org.skyscreamer.nevado.jms.connector.amazonaws;
 
-import com.amazonaws.AmazonClientException;
-import com.amazonaws.AmazonServiceException;
-import com.amazonaws.ClientConfiguration;
-import com.amazonaws.Protocol;
-import com.amazonaws.auth.*;
-import com.amazonaws.client.builder.AwsClientBuilder;
-import com.amazonaws.client.builder.ExecutorFactory;
-import com.amazonaws.services.sns.*;
-import com.amazonaws.services.sns.model.*;
-import com.amazonaws.services.sqs.*;
-import com.amazonaws.services.sqs.model.CreateQueueRequest;
-import com.amazonaws.services.sqs.model.CreateQueueResult;
-import com.amazonaws.services.sqs.model.ListQueuesRequest;
-import com.amazonaws.services.sqs.model.ListQueuesResult;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.InstanceProfileCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.awscore.client.builder.AwsSyncClientBuilder;
+import software.amazon.awssdk.awscore.client.builder.AwsClientBuilder;
+import software.amazon.awssdk.awscore.exception.AwsServiceException;
+import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
+import software.amazon.awssdk.core.exception.SdkException;
+import software.amazon.awssdk.core.retry.RetryMode;
+import software.amazon.awssdk.http.apache.ApacheHttpClient;
+import software.amazon.awssdk.http.apache.ProxyConfiguration;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.sns.SnsClient;
+import software.amazon.awssdk.services.sns.model.CreateTopicRequest;
+import software.amazon.awssdk.services.sns.model.CreateTopicResponse;
+import software.amazon.awssdk.services.sns.model.DeleteTopicRequest;
+import software.amazon.awssdk.services.sns.model.ListTopicsResponse;
+import software.amazon.awssdk.services.sns.model.PublishRequest;
+import software.amazon.awssdk.services.sns.model.SubscribeRequest;
+import software.amazon.awssdk.services.sns.model.Topic;
+import software.amazon.awssdk.services.sns.model.UnsubscribeRequest;
+import software.amazon.awssdk.services.sqs.SqsClient;
+import software.amazon.awssdk.services.sqs.model.CreateQueueRequest;
+import software.amazon.awssdk.services.sqs.model.CreateQueueResponse;
+import software.amazon.awssdk.services.sqs.model.ListQueuesRequest;
+import software.amazon.awssdk.services.sqs.model.ListQueuesResponse;
 import org.apache.commons.lang.StringUtils;
 import org.skyscreamer.nevado.jms.connector.AbstractSQSConnector;
 import org.skyscreamer.nevado.jms.connector.SQSMessage;
@@ -28,13 +41,18 @@ import jakarta.jms.JMSException;
 import jakarta.jms.JMSSecurityException;
 import jakarta.jms.ResourceAllocationException;
 import javax.net.ssl.SSLException;
+import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.net.UnknownHostException;
+import java.time.Duration;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Connector for SQS-only implementation of the Nevado JMS driver.
@@ -44,8 +62,11 @@ import java.util.concurrent.Executors;
 public class AmazonAwsSQSConnector extends AbstractSQSConnector {
     public static final String MESSAGE_ATTRIBUTE_APPROXIMATE_RECEIVE_COUNT = "ApproximateReceiveCount";
 
-    private final AmazonSQS _amazonSQS;
-    private final AmazonSNS _amazonSNS;
+    private final SqsClient _amazonSQS;
+    private final SnsClient _amazonSNS;
+    private final ExecutorService _sqsExecutor;
+    private final ExecutorService _snsExecutor;
+    private final String _proxyHost;
 
     private boolean _testAlwaysPasses = false;
 
@@ -56,88 +77,94 @@ public class AmazonAwsSQSConnector extends AbstractSQSConnector {
 
     public AmazonAwsSQSConnector(String awsAccessKey, String awsSecretKey, String awsSQSEndpoint, String awsSNSEndpoint, boolean isSecure, long receiveCheckIntervalMs, boolean isAsync) {
         super(receiveCheckIntervalMs, isAsync);
-        ClientConfiguration clientConfiguration = new ClientConfiguration();
+        // Proxy as AWS SDK v1's ClientConfiguration resolved it: http.proxyHost/http.proxyPort if set, otherwise the
+        // standard proxy system properties of the protocol in use.
         String proxyHost = System.getProperty("http.proxyHost");
         String proxyPort = System.getProperty("http.proxyPort");
-        if(proxyHost != null){
-            clientConfiguration.setProxyHost(proxyHost);
-            if(proxyPort != null){
-              clientConfiguration.setProxyPort(Integer.parseInt(proxyPort));
-            }
+        if (proxyHost == null && isSecure) {
+            proxyHost = System.getProperty("https.proxyHost");
+            proxyPort = System.getProperty("https.proxyPort");
         }
-        clientConfiguration.setProtocol(isSecure ? Protocol.HTTPS : Protocol.HTTP);
-        AwsClientBuilder.EndpointConfiguration awsSQSEndpointConfiguration = new AwsClientBuilder.EndpointConfiguration(awsSQSEndpoint, null);
-        AwsClientBuilder.EndpointConfiguration awsSNSEndpointConfiguration = new AwsClientBuilder.EndpointConfiguration(awsSNSEndpoint, null);
-
-        if (isAsync) {
-            ExecutorFactory executorFactory = new ExecutorFactory() {
-                @Override
-                public ExecutorService newExecutor() {
-                    return Executors.newSingleThreadExecutor();
-                }
-            };
-
-            if(StringUtils.isNotEmpty(awsAccessKey) && StringUtils.isNotEmpty(awsSecretKey)) {
-                BasicAWSCredentials basicAWSCredentials = new BasicAWSCredentials(awsAccessKey, awsSecretKey);
-                _amazonSQS = AmazonSQSAsyncClientBuilder.standard()
-                        .withCredentials(new AWSStaticCredentialsProvider(basicAWSCredentials))
-                        .withClientConfiguration(clientConfiguration)
-                        .withExecutorFactory(executorFactory)
-                        .withEndpointConfiguration(awsSQSEndpointConfiguration)
-                        .build();
-                _amazonSNS = AmazonSNSAsyncClientBuilder.standard()
-                        .withCredentials(new AWSStaticCredentialsProvider(basicAWSCredentials))
-                        .withClientConfiguration(clientConfiguration)
-                        .withExecutorFactory(executorFactory)
-                        .withEndpointConfiguration(awsSNSEndpointConfiguration)
-                        .build();
-            }
-            else {
-                _amazonSQS = AmazonSQSAsyncClientBuilder
-                        .standard()
-                        .withClientConfiguration(clientConfiguration)
-                        .withCredentials(InstanceProfileCredentialsProvider.getInstance())
-                        .withExecutorFactory(executorFactory)
-                        .withEndpointConfiguration(awsSQSEndpointConfiguration)
-                        .build();
-                _amazonSNS = AmazonSNSAsyncClientBuilder
-                        .standard()
-                        .withClientConfiguration(clientConfiguration)
-                        .withCredentials(InstanceProfileCredentialsProvider.getInstance())
-                        .withExecutorFactory(executorFactory)
-                        .withEndpointConfiguration(awsSNSEndpointConfiguration)
-                        .build();
-            }
+        _proxyHost = proxyHost;
+        AwsCredentialsProvider credentialsProvider;
+        if(StringUtils.isNotEmpty(awsAccessKey) && StringUtils.isNotEmpty(awsSecretKey)) {
+            credentialsProvider = StaticCredentialsProvider.create(AwsBasicCredentials.create(awsAccessKey, awsSecretKey));
         }
         else {
-            if(StringUtils.isNotEmpty(awsAccessKey) && StringUtils.isNotEmpty(awsSecretKey)) {
-                BasicAWSCredentials basicAWSCredentials = new BasicAWSCredentials(awsAccessKey, awsSecretKey);
-                _amazonSQS = AmazonSQSClientBuilder.standard()
-                    .withCredentials(new AWSStaticCredentialsProvider(basicAWSCredentials))
-                    .withClientConfiguration(clientConfiguration)
-                    .withEndpointConfiguration(awsSQSEndpointConfiguration)
-                    .build();
-                _amazonSNS = AmazonSNSClientBuilder.standard()
-                    .withCredentials(new AWSStaticCredentialsProvider(basicAWSCredentials))
-                    .withClientConfiguration(clientConfiguration)
-                    .withEndpointConfiguration(awsSNSEndpointConfiguration)
-                    .build();
-            }
-            else {
-                _amazonSQS = AmazonSQSClientBuilder
-                        .standard()
-                        .withClientConfiguration(clientConfiguration)
-                        .withCredentials(InstanceProfileCredentialsProvider.getInstance())
-                        .withEndpointConfiguration(awsSQSEndpointConfiguration)
-                        .build();
-                _amazonSNS = AmazonSNSClientBuilder
-                        .standard()
-                        .withClientConfiguration(clientConfiguration)
-                        .withCredentials(InstanceProfileCredentialsProvider.getInstance())
-                        .withEndpointConfiguration(awsSNSEndpointConfiguration)
-                        .build();
+            credentialsProvider = InstanceProfileCredentialsProvider.create();
+        }
+        _amazonSQS = configure(SqsClient.builder(), credentialsProvider, awsSQSEndpoint, "sqs", isSecure, proxyHost, proxyPort).build();
+        _amazonSNS = configure(SnsClient.builder(), credentialsProvider, awsSNSEndpoint, "sns", isSecure, proxyHost, proxyPort).build();
+        if (isAsync) {
+            // AWS SDK v1's async clients: the synchronous client run on a single-thread executor, result not awaited
+            _sqsExecutor = Executors.newSingleThreadExecutor();
+            _snsExecutor = Executors.newSingleThreadExecutor();
+        }
+        else {
+            _sqsExecutor = null;
+            _snsExecutor = null;
+        }
+    }
+
+    private static <B extends AwsClientBuilder<B, ?> & AwsSyncClientBuilder<B, ?>> B configure(
+            B builder, AwsCredentialsProvider credentialsProvider, String endpoint, String service, boolean isSecure,
+            String proxyHost, String proxyPort) {
+        ProxyConfiguration.Builder proxy = ProxyConfiguration.builder()
+                .useSystemPropertyValues(false)
+                .useEnvironmentVariableValues(false);
+        if (proxyHost != null) {
+            proxy.endpoint(URI.create("http://" + proxyHost + (proxyPort != null ? ":" + Integer.parseInt(proxyPort) : "")));
+            String nonProxyHosts = System.getProperty("http.nonProxyHosts");
+            if (nonProxyHosts != null) {
+                for (String host : nonProxyHosts.split("\\|")) {
+                    if (!host.trim().isEmpty()) {
+                        proxy.addNonProxyHost(host.trim());
+                    }
+                }
             }
         }
+        // AWS SDK v1 defaults: 10 s to connect, 50 s socket timeout, 50 connections, 3 retries
+        builder.httpClientBuilder(ApacheHttpClient.builder()
+                        .connectionTimeout(Duration.ofSeconds(10))
+                        .socketTimeout(Duration.ofSeconds(50))
+                        .maxConnections(50)
+                        .proxyConfiguration(proxy.build()))
+                .overrideConfiguration(ClientOverrideConfiguration.builder().retryStrategy(RetryMode.LEGACY).build())
+                .credentialsProvider(credentialsProvider);
+        if (endpoint != null) {
+            URI uri = toURI(endpoint, isSecure);
+            builder.endpointOverride(uri).region(Region.of(signingRegion(uri.getHost(), service)));
+        }
+        else {
+            builder.region(Region.US_EAST_1);
+        }
+        return builder;
+    }
+
+    // As AWS SDK v1 (AmazonWebServiceClient.toURI): an endpoint without a scheme gets the configured protocol's
+    private static URI toURI(String endpoint, boolean isSecure) {
+        if (!endpoint.contains("://")) {
+            endpoint = (isSecure ? "https" : "http") + "://" + endpoint;
+        }
+        return URI.create(endpoint.trim());
+    }
+
+    // As AWS SDK v1 (AwsHostNameUtils.parseRegionName): the region an endpoint is signed for, us-east-1 by default
+    static String signingRegion(String host, String service) {
+        if (host == null) {
+            return "us-east-1";
+        }
+        if (host.endsWith(".amazonaws.com")) {
+            String fragment = host.substring(0, host.length() - ".amazonaws.com".length());
+            int index = fragment.lastIndexOf('.');
+            if (index == -1) {
+                return "us-east-1";
+            }
+            String region = fragment.substring(index + 1);
+            return "us-gov".equals(region) ? "us-gov-west-1" : region;
+        }
+        Matcher matcher = Pattern.compile("^(?:.+\\.)?" + Pattern.quote(service) + "[.-]([a-z0-9-]+)\\.").matcher(host);
+        return matcher.find() ? matcher.group(1) : "us-east-1";
     }
 
     public boolean isTestAlwaysPasses() {
@@ -151,15 +178,15 @@ public class AmazonAwsSQSConnector extends AbstractSQSConnector {
     @Override
     protected void sendSNSMessage(NevadoTopic topic, String serializedMessage) throws JMSException {
         String arn = getTopicARN(topic);
-        PublishRequest request = new PublishRequest(arn, serializedMessage);
+        final PublishRequest request = PublishRequest.builder().topicArn(arn).message(serializedMessage).build();
         try {
             if (isAsync()) {
-                ((AmazonSNSAsync)_amazonSNS).publishAsync(request);
+                _snsExecutor.submit(() -> _amazonSNS.publish(request));
             } else {
                 _amazonSNS.publish(request);
             }
         }
-        catch (AmazonClientException e) {
+        catch (SdkException e) {
             throw handleAWSException("Unable to send message to topic: " + arn, e);
         }
     }
@@ -169,10 +196,10 @@ public class AmazonAwsSQSConnector extends AbstractSQSConnector {
         try {
             if (queue.getQueueUrl() == null)
             {
-                CreateQueueResult result = _amazonSQS.createQueue(new CreateQueueRequest(queue.getQueueName()));
-                queue.setQueueUrl(result.getQueueUrl());
+                CreateQueueResponse result = _amazonSQS.createQueue(CreateQueueRequest.builder().queueName(queue.getQueueName()).build());
+                queue.setQueueUrl(result.queueUrl());
             }
-        } catch (AmazonClientException e) {
+        } catch (SdkException e) {
             throw handleAWSException("Unable to get message queue '" + queue, e);
         }
 
@@ -187,7 +214,7 @@ public class AmazonAwsSQSConnector extends AbstractSQSConnector {
         try {
             _amazonSQS.listQueues();
             _amazonSNS.listTopics();
-        } catch (AmazonClientException e) {
+        } catch (SdkException e) {
             throw handleAWSException("Connection test failed", e);
         }
     }
@@ -195,14 +222,14 @@ public class AmazonAwsSQSConnector extends AbstractSQSConnector {
     @Override
     public Collection<NevadoQueue> listQueues(String temporaryQueuePrefix) throws JMSException {
         Collection<NevadoQueue> queues;
-        ListQueuesResult result;
+        ListQueuesResponse result;
         try {
-            result = _amazonSQS.listQueues(new ListQueuesRequest().withQueueNamePrefix(temporaryQueuePrefix));
-        } catch (AmazonClientException e) {
+            result = _amazonSQS.listQueues(ListQueuesRequest.builder().queueNamePrefix(temporaryQueuePrefix).build());
+        } catch (SdkException e) {
             throw handleAWSException("Unable to list queues with prefix '" + temporaryQueuePrefix + "'", e);
         }
-        queues = new HashSet<NevadoQueue>(result.getQueueUrls().size());
-        for(String queueUrlString : result.getQueueUrls()) {
+        queues = new HashSet<NevadoQueue>(result.queueUrls().size());
+        for(String queueUrlString : result.queueUrls()) {
             URL queueURL = null;
             try {
                 queueURL = new URL(queueUrlString);
@@ -224,8 +251,8 @@ public class AmazonAwsSQSConnector extends AbstractSQSConnector {
     @Override
     public void deleteTopic(NevadoTopic topic) throws JMSException {
         try {
-            _amazonSNS.deleteTopic(new DeleteTopicRequest().withTopicArn(getTopicARN(topic)));
-        } catch (AmazonClientException e) {
+            _amazonSNS.deleteTopic(DeleteTopicRequest.builder().topicArn(getTopicARN(topic)).build());
+        } catch (SdkException e) {
             throw handleAWSException("Unable to delete message topic '" + topic, e);
         }
     }
@@ -233,15 +260,15 @@ public class AmazonAwsSQSConnector extends AbstractSQSConnector {
     @Override
     public Collection<NevadoTopic> listTopics() throws JMSException {
         Collection<NevadoTopic> topics;
-        ListTopicsResult result;
+        ListTopicsResponse result;
         try {
             result = _amazonSNS.listTopics();
-        } catch (AmazonClientException e) {
+        } catch (SdkException e) {
             throw handleAWSException("Unable to list topics", e);
         }
-        topics = new HashSet<NevadoTopic>(result.getTopics().size());
-        for(Topic topic : result.getTopics()) {
-            topics.add(new NevadoTopic(topic.getTopicArn()));
+        topics = new HashSet<NevadoTopic>(result.topics().size());
+        for(Topic topic : result.topics()) {
+            topics.add(new NevadoTopic(topic.topicArn()));
         }
         return topics;
     }
@@ -254,9 +281,9 @@ public class AmazonAwsSQSConnector extends AbstractSQSConnector {
             String sqsArn = queue.getQueueARN();
             String snsArn = getTopicARN(topic);
             queue.setPolicy(getPolicy(snsArn, sqsArn));
-            subscriptionArn = _amazonSNS.subscribe(new SubscribeRequest().withTopicArn(getTopicARN(topic))
-                    .withProtocol("sqs").withEndpoint(sqsArn)).getSubscriptionArn();
-        } catch (AmazonClientException e) {
+            subscriptionArn = _amazonSNS.subscribe(SubscribeRequest.builder().topicArn(getTopicARN(topic))
+                    .protocol("sqs").endpoint(sqsArn).build()).subscriptionArn();
+        } catch (SdkException e) {
             throw handleAWSException("Unable to subscripe to topic " + topic, e);
         }
         return subscriptionArn;
@@ -271,8 +298,8 @@ public class AmazonAwsSQSConnector extends AbstractSQSConnector {
             throw new IllegalArgumentException("Topic doesn't have a subscription");
         }
         try {
-            _amazonSNS.unsubscribe(new UnsubscribeRequest().withSubscriptionArn(topic.getSubscriptionArn()));
-        } catch (AmazonClientException e) {
+            _amazonSNS.unsubscribe(UnsubscribeRequest.builder().subscriptionArn(topic.getSubscriptionArn()).build());
+        } catch (SdkException e) {
             throw handleAWSException("Unable to subscribe topic " + topic + " with sub ARN "
                     + topic.getSubscriptionArn(), e);
         }
@@ -300,36 +327,42 @@ public class AmazonAwsSQSConnector extends AbstractSQSConnector {
         return message;
     }
 
-    public AmazonSQS getAmazonSQS() {
+    public SqsClient getAmazonSQS() {
         return _amazonSQS;
     }
 
-    public AmazonSNS getAmazonSNS() {
+    public SnsClient getAmazonSNS() {
         return _amazonSNS;
+    }
+
+    /** The executor the async send runs on (null unless async) */
+    ExecutorService getSQSExecutor() {
+        return _sqsExecutor;
     }
 
     protected String getTopicARN(NevadoTopic topic) throws JMSException {
         if (topic.getArn() == null)
         {
-            CreateTopicResult result;
+            CreateTopicResponse result;
             try {
-                result = _amazonSNS.createTopic(new CreateTopicRequest(topic.getTopicName()));
+                result = _amazonSNS.createTopic(CreateTopicRequest.builder().name(topic.getTopicName()).build());
             }
-            catch (AmazonClientException e) {
+            catch (SdkException e) {
                 throw handleAWSException("Unable to create/lookup topic: " + topic, e);
             }
-            topic.setArn(result.getTopicArn());
+            topic.setArn(result.topicArn());
         }
         return topic.getArn();
     }
 
-    protected JMSException handleAWSException(String message, AmazonClientException e) {
+    protected JMSException handleAWSException(String message, SdkException e) {
         JMSException jmsException;
-        String exMessage = message + ": " + e.getMessage();
+        String exMessage = message + ": " + v1Message(e);
         _log.error(exMessage, e);
-        if (e.getCause() != null &&
-                (UnknownHostException.class.equals(e.getCause().getClass())
-                        || SSLException.class.equals((e.getCause().getClass()))))
+        Throwable cause = ioCause(e);
+        if (cause != null &&
+                (UnknownHostException.class.equals(cause.getClass())
+                        || SSLException.class.equals((cause.getClass()))))
         {
             jmsException = new ResourceAllocationException(exMessage);
         }
@@ -344,9 +377,38 @@ public class AmazonAwsSQSConnector extends AbstractSQSConnector {
         return jmsException;
     }
 
-    private boolean isSecurityException(AmazonClientException e) {
-        if (e instanceof AmazonServiceException) {
-            return AWS_ERROR_CODE_AUTHENTICATION.equals(((AmazonServiceException)e).getErrorCode());
+    // The exception's message as AWS SDK v1 wrote it (AmazonServiceException.getMessage(), or AmazonHttpClient's
+    // "Unable to execute HTTP request: " for I/O failures), so that the JMSException texts stay the same.
+    private String v1Message(SdkException e) {
+        if (e instanceof AwsServiceException && ((AwsServiceException) e).awsErrorDetails() != null) {
+            AwsServiceException ase = (AwsServiceException) e;
+            String serviceName = ase.awsErrorDetails().serviceName();
+            return ase.awsErrorDetails().errorMessage()
+                    + " (Service: " + ("Sqs".equals(serviceName) ? "AmazonSQS" : "Sns".equals(serviceName) ? "AmazonSNS" : serviceName)
+                    + "; Status Code: " + ase.statusCode()
+                    + "; Error Code: " + ase.awsErrorDetails().errorCode()
+                    + "; Request ID: " + ase.requestId()
+                    + "; Proxy: " + _proxyHost + ")";
+        }
+        Throwable cause = ioCause(e);
+        if (cause != null) {
+            return "Unable to execute HTTP request: " + cause.getMessage();
+        }
+        return e.getMessage();
+    }
+
+    private static Throwable ioCause(SdkException e) {
+        for (Throwable t = e.getCause(); t != null && t != t.getCause(); t = t.getCause()) {
+            if (t instanceof IOException) {
+                return t;
+            }
+        }
+        return null;
+    }
+
+    private boolean isSecurityException(SdkException e) {
+        if (e instanceof AwsServiceException && ((AwsServiceException) e).awsErrorDetails() != null) {
+            return AWS_ERROR_CODE_AUTHENTICATION.equals(((AwsServiceException)e).awsErrorDetails().errorCode());
         }
         else {
             return false;

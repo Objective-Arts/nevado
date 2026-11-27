@@ -10,6 +10,7 @@ import org.skyscreamer.nevado.jms.message.NevadoMessage;
 
 import jakarta.jms.JMSException;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Mock SQSConnector to test functionality without having to connect to AWS.
@@ -19,8 +20,10 @@ import java.util.*;
 public class MockSQSConnector extends AbstractSQSConnector implements ResettableMock {
     public static final String MESSAGE_ATTRIBUTE_RECEIVE_COUNT = "NevadoMockMessageReceiveCount";
 
-    private final Map<NevadoQueue, MockSQSQueue> _mockQueueMap = new HashMap<NevadoQueue, MockSQSQueue>();
-    private final Map<NevadoTopic, Collection<MockSQSQueue>> _mockTopicMap = new HashMap<NevadoTopic, Collection<MockSQSQueue>>();
+    // Concurrent maps: connections on several threads share one mock, and listing while another thread creates or
+    // deletes a destination must not throw ConcurrentModificationException.
+    private final Map<NevadoQueue, MockSQSQueue> _mockQueueMap = new ConcurrentHashMap<NevadoQueue, MockSQSQueue>();
+    private final Map<NevadoTopic, Collection<MockSQSQueue>> _mockTopicMap = new ConcurrentHashMap<NevadoTopic, Collection<MockSQSQueue>>();
 
     public MockSQSConnector() {
         this(200);
@@ -104,7 +107,7 @@ public class MockSQSConnector extends AbstractSQSConnector implements Resettable
 
     @Override
     public void unsubscribe(NevadoTopic topic) throws JMSException {
-        Collection<MockSQSQueue> topicEndpoints = _mockTopicMap.get(topic);
+        Collection<MockSQSQueue> topicEndpoints = topic != null ? _mockTopicMap.get(topic) : null;
         if (topicEndpoints != null) {
             for(MockSQSQueue endpointQueue : topicEndpoints)
             {
@@ -152,6 +155,8 @@ public class MockSQSConnector extends AbstractSQSConnector implements Resettable
         for(NevadoTopic topic : _mockTopicMap.keySet())
         {
             Collection<MockSQSQueue> topicEndpoints = _mockTopicMap.get(topic);
+            if (topicEndpoints == null)
+                continue; // deleted meanwhile by another thread
             for(MockSQSQueue endpointQueue : topicEndpoints)
             {
                 if (endpointQueue.getQueue().equals(topic.getTopicEndpoint()))
@@ -164,7 +169,7 @@ public class MockSQSConnector extends AbstractSQSConnector implements Resettable
     }
 
     private void checkTopicExists(NevadoTopic topic) throws JMSException {
-        if (!_mockTopicMap.containsKey(topic))
+        if (topic == null || !_mockTopicMap.containsKey(topic))
         {
             throw new JMSException("No such topic: " + topic);
         }
